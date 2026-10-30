@@ -31,6 +31,14 @@ long before the data is really on the stick. Pull it out at that point and the d
 
 ## Install
 
+One command, copy and paste into a terminal:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/nathanrodrigues2111/usb-write-fix/master/99-usb-writeback.rules | sudo tee /etc/udev/rules.d/99-usb-writeback.rules >/dev/null && sudo udevadm control --reload && echo Installed
+```
+
+Or clone and run the script:
+
 ```sh
 git clone https://github.com/nathanrodrigues2111/usb-write-fix.git
 cd usb-write-fix
@@ -55,6 +63,12 @@ instead of jumping to 100 percent.
 
 ```sh
 ./uninstall.sh
+```
+
+Or without the repo:
+
+```sh
+sudo rm /etc/udev/rules.d/99-usb-writeback.rules && sudo udevadm control --reload
 ```
 
 ## Notes
