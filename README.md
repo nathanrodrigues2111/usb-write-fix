@@ -20,5 +20,8 @@ data is actually on the stick. Internal disks are untouched.
 
     pkexec rm /etc/udev/rules.d/99-usb-writeback.rules
 
-Still press eject before unplugging. It flushes the last 16 MB and cleanly closes NTFS.
-If an NTFS stick mounts read-only after a bad unplug: `pkexec ntfsfix -d /dev/sdX1`.
+NTFS sticks left dirty by a bad unplug are cleaned with `ntfsfix -d` on plug-in, so they
+mount read-write again. Windows fast startup (hibernated volume) still mounts read-only;
+turn fast startup off on the Windows PC.
+
+Still press eject before unplugging.
