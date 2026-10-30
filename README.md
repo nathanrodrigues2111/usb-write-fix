@@ -1,43 +1,53 @@
-# usb-write-fix
+<div align="center">
 
-Two annoying Linux pendrive problems, fixed with one udev rule:
+# 🔌 usb-write-fix
 
-1. **Files vanish after unplug.** You copy files, the copy dialog says done, you pull the
-   stick out, plug it back in, and the files are not there.
-2. **Stick mounts read-only.** Sometimes the pendrive opens as read-only and you cannot
-   copy anything onto it.
+**Stop losing files on Linux pendrives.**
+Real copy progress. No more read-only sticks. One command.
 
-## Why it happens
+[![License: MIT](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)](LICENSE)
+![Platform](https://img.shields.io/badge/platform-Linux-0ea5e9?style=flat-square&logo=linux&logoColor=white)
+![udev](https://img.shields.io/badge/built%20with-udev-a855f7?style=flat-square)
+![Size](https://img.shields.io/badge/size-1%20file-f59e0b?style=flat-square)
 
-**Files vanish:** Linux does not write to the stick right away. It keeps the data in RAM
-(often gigabytes) and writes it out later. Pendrives are slow, so the copy dialog finishes
-long before the data is really on the stick. Pull it out at that point and the data is lost.
+</div>
 
-**Read-only:** pulling a stick out before the write finishes leaves an NTFS drive marked
-"dirty". On the next plug-in, Linux sees the mark and mounts the drive read-only to be safe.
+---
 
-## What this does
+## 😤 The problem
 
-- Lets Linux hold at most **16 MB** of unwritten data per USB drive. The copy dialog now
-  shows the real speed and only finishes when the files are actually on the stick.
-- On plug-in, runs `ntfsfix -d` on USB NTFS drives to clear the dirty mark, so they mount
-  read-write again.
-- Internal disks are not touched. Nothing runs in the background.
+You copy files to a pendrive. The dialog says **done**. You unplug it, plug it back in, and... **the files are gone.**
 
-## Requirements
+Or the stick suddenly shows up as **read-only** and you cannot copy anything onto it.
 
-- Linux with udev (Ubuntu, Zorin, Mint, Fedora, Debian, Arch, and most others)
-- `ntfs-3g` for the read-only fix (`sudo apt install ntfs-3g`, usually already installed)
+## 🧠 Why it happens
 
-## Install
+| Symptom | What is really going on |
+| --- | --- |
+| **Files vanish** | Linux keeps your copy in RAM (often gigabytes) and writes it to the stick later. Pendrives are slow, so the dialog says done long before the data is actually there. |
+| **Read-only stick** | Unplugging mid-write leaves NTFS marked *dirty*. Next time, Linux plays it safe and mounts the drive read-only. |
 
-One command, copy and paste into a terminal:
+## ✨ What this fixes
+
+| | Before | After |
+| --- | --- | --- |
+| Copy progress | Jumps to 100% instantly, fake | Real speed of your stick |
+| Data waiting in RAM | Up to several GB | Max **16 MB** per USB drive |
+| Unplug after "done" | Files lost | Files are on the stick |
+| Dirty NTFS stick | Mounts read-only | Auto-cleaned, mounts read-write |
+| Internal disks | | Untouched |
+| Background process | | None, pure udev rule |
+
+## 🚀 Install
+
+**One command.** Paste into a terminal:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/nathanrodrigues2111/usb-write-fix/master/99-usb-writeback.rules | sudo tee /etc/udev/rules.d/99-usb-writeback.rules >/dev/null && sudo udevadm control --reload && echo Installed
 ```
 
-Or clone and run the script:
+<details>
+<summary><b>Or clone the repo</b></summary>
 
 ```sh
 git clone https://github.com/nathanrodrigues2111/usb-write-fix.git
@@ -45,43 +55,63 @@ cd usb-write-fix
 ./install.sh
 ```
 
-You will get a password prompt. Unplug and replug your USB drives afterwards.
+</details>
 
-## Check it works
+Then **unplug and replug** your USB drives. That's it. ✅
 
-Plug in a pendrive, find its name (for example `sdb`) with `lsblk`, then:
+## 🔍 Check it works
+
+Plug in a pendrive and find its name with `lsblk` (for example `sdb`):
 
 ```sh
-cat /sys/block/sdb/bdi/max_bytes     # about 16777216
+cat /sys/block/sdb/bdi/max_bytes     # ~16777216
 cat /sys/block/sdb/bdi/strict_limit  # 1
 ```
 
-Copy a big file to the stick. The progress bar should now move at the stick's real speed
-instead of jumping to 100 percent.
+Copy a big file. The progress bar now moves at your stick's real speed. 🐢 → ✅
 
-## Uninstall
+## 📋 Requirements
 
-```sh
-./uninstall.sh
-```
+- 🐧 Any Linux with udev: Ubuntu, Zorin, Mint, Fedora, Debian, Arch, Pop!_OS...
+- 💾 `ntfs-3g` for the read-only fix (usually preinstalled, else `sudo apt install ntfs-3g`)
 
-Or without the repo:
+## 💡 Good to know
+
+> [!NOTE]
+> **Copies look slower now.** They are not. The old speed was fake, the data was only sitting in RAM.
+
+> [!TIP]
+> **Still click eject** before unplugging. It flushes the last few MB and closes the drive cleanly.
+
+> [!WARNING]
+> **Still read-only?** The stick was likely last used on Windows with **Fast Startup** on, which leaves it hibernated. Turn it off in *Control Panel > Power Options > Choose what the power buttons do*, or hold **Shift** while clicking Shut down.
+
+<details>
+<summary><b>⚙️ Change the 16 MB limit</b></summary>
+
+Edit `16777216` (bytes) in `99-usb-writeback.rules`, then run `./install.sh` again.
+
+</details>
+
+## 🗑️ Uninstall
 
 ```sh
 sudo rm /etc/udev/rules.d/99-usb-writeback.rules && sudo udevadm control --reload
 ```
 
-## Notes
+Or `./uninstall.sh` from the repo. Replug drives to go back to normal.
 
-- **Copies may look slower.** They are not. The old speed was fake, the data was only in RAM.
-- **Still click eject before unplugging.** It writes the last few MB and closes the drive cleanly.
-- **Still read-only after install?** The stick was probably last used on a Windows PC with
-  Fast Startup on. Windows leaves the drive hibernated and Linux will not write to it. Turn
-  off Fast Startup in Windows (Control Panel, Power Options, Choose what the power buttons
-  do), or shut Windows down with Shift + Shut down.
-- **Need a different limit?** Edit `16777216` (bytes) in `99-usb-writeback.rules` and run
-  `./install.sh` again.
+## 🛠️ How it works
 
-## License
+One udev rule, two lines:
 
-MIT
+1. On USB disk plug-in, sets `bdi/max_bytes` to 16 MB and turns on `bdi/strict_limit`, so the kernel cannot hoard writes for that drive.
+2. On USB NTFS partition plug-in, runs `ntfsfix -d` to clear the dirty flag. It refuses mounted or hibernated volumes, so it is safe.
+
+---
+
+<div align="center">
+
+**MIT licensed.** If this saved your files, drop a ⭐
+
+</div>
