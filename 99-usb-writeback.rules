@@ -1,0 +1,2 @@
+# Cap dirty page cache for USB disks so copy progress is real and unplug loses at most 16 MB
+ACTION=="add|change", SUBSYSTEM=="block", ENV{DEVTYPE}=="disk", ENV{ID_BUS}=="usb", RUN+="/bin/sh -c 'echo 1 > /sys/block/%k/bdi/strict_limit; echo 16777216 > /sys/block/%k/bdi/max_bytes'"
